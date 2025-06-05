@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <title>Forum Feed</title>
+
+  <link rel="stylesheet" href="styles/style.css">
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- ✅ Plyr -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/plyr@3.7.8/dist/plyr.css" />
+  <script src="https://cdn.jsdelivr.net/npm/plyr@3.7.8/dist/plyr.polyfilled.min.js"></script>
+  <script
+    src="https://unpkg.com/filepond-plugin-file-validate-type/dist/filepond-plugin-file-validate-type.js"></script>
+  <script src="https://unpkg.com/filepond-plugin-image-preview/dist/filepond-plugin-image-preview.js"></script>
+  <script src="https://unpkg.com/filepond-plugin-media-preview/dist/filepond-plugin-media-preview.js"></script>
+  <script src="https://unpkg.com/filepond-plugin-file-poster/dist/filepond-plugin-file-poster.js"></script>
+  <script src="https://unpkg.com/filepond/dist/filepond.js"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tributejs@5.1.3/dist/tribute.css">
+  <link href="https://unpkg.com/filepond/dist/filepond.css" rel="stylesheet" />
+  <link href="https://unpkg.com/filepond-plugin-image-preview/dist/filepond-plugin-image-preview.css"
+    rel="stylesheet" />
+  <link href="https://unpkg.com/filepond-plugin-media-preview/dist/filepond-plugin-media-preview.css"
+    rel="stylesheet" />
+  <link href="https://unpkg.com/filepond-plugin-file-poster/dist/filepond-plugin-file-poster.css" rel="stylesheet" />
+  <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jsrender/jsrender.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/tributejs@5.1.3/dist/tribute.min.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+</head>
+
+<body class="max-w-[700px] bg-[#f1f1f1] flex flex-col items-center justify-center m-auto p-6 max-[768px]:p-2">
+
+  <div id="login-modal" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+    <div class="bg-white p-4 rounded shadow-lg w-[90%] max-w-sm relative">
+      <button id="close-login-modal" class="absolute top-2 right-2"><i class="fa-solid fa-xmark"></i></button>
+      <h2 class="text-lg font-bold mb-4">Enter your login user id</h2>
+      <input type="number" id="login-user-id" class="w-full border px-2 py-1 rounded mb-4" />
+      <button id="login-button" class="bg-blue-500 text-white px-4 py-1 rounded w-full">Login</button>
+    </div>
+  </div>
+
+  <div id="topOfForum"></div>
+  <div onclick="document.getElementById('topOfForum').scrollIntoView({ behavior: 'smooth' })"
+    class="p-3 bg-[var(--primary)] flex items-center justify-center cursor-pointer fixed bottom-[1rem] right-[1rem] max-[768px]:hidden z-[99]">
+    <i class="fa-solid fa-arrow-up text-white"></i>
+  </div>
+
+  <div class="hidden px-4 py-6 bg-[#d1d1d1] w-full mb-4 relative">
+    <div class="bell-wrapper relative ml-auto w-max">
+      <div class="bell text-sm cursor-pointer notificationWrapperToggler"><i class="fa-solid fa-bell"></i></div>
+    </div>
+    <div
+      class="notificationsWrapper hidden flex-col p-4 absolute top-[4rem] right-0 bg-white shadow-lg rounder w-full max-w-[400px] h-[400px] overflow-y-scroll z-[9]">
+      <div class="text-sm">Notifications</div>
+      <div class="text-xs text-blue-600 cursor-pointer hover:underline" id="markAllAsRead">
+        Mark all as read
+      </div>
+      <div id="output" class="mt-4"></div>
+    </div>
+  </div>
+
+  <div id="create-post-trigger" class="bg-white shadow-lg rounded w-full p-4 flex items-center cursor-pointer mb-4">
+    <span class="text-gray-500">What's on your mind?</span>
+    <img
+      src="https://files.ontraport.com/media/b0456fe87439430680b173369cc54cea.php03bzcx?Expires=4895186056&Signature=fw-mkSjms67rj5eIsiDF9QfHb4EAe29jfz~yn3XT0--8jLdK4OGkxWBZR9YHSh26ZAp5EHj~6g5CUUncgjztHHKU9c9ymvZYfSbPO9JGht~ZJnr2Gwmp6vsvIpYvE1pEywTeoigeyClFm1dHrS7VakQk9uYac4Sw0suU4MpRGYQPFB6w3HUw-eO5TvaOLabtuSlgdyGRie6Ve0R7kzU76uXDvlhhWGMZ7alNCTdS7txSgUOT8oL9pJP832UsasK4~M~Na0ku1oY-8a7GcvvVv6j7yE0V0COB9OP0FbC8z7eSdZ8r7avFK~f9Wl0SEfS6MkPQR2YwWjr55bbJJhZnZA__&Key-Pair-Id=APKAJVAAMVW6XQYWSTNA"
+      alt="avatar" class="w-8 h-8 rounded-full ml-auto">
+  </div>
+
+  <div id="create-post-modal" class="hidden fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+    <div class="bg-white p-4 rounded shadow-lg w-[90%] max-w-lg relative">
+      <div class="flex items-center justify-between mb-4">
+        <h2 class="text-lg font-bold">Create a Post</h2>
+        <button id="close-post-modal"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div id="post-creation-form" class="post-form">
+        <div class="toolbar">
+          <button data-cmd="bold"><b>B</b></button>
+          <button data-cmd="italic"><i>I</i></button>
+          <button data-cmd="underline"><u>U</u></button>
+          <button data-cmd="link"><i class="fa-solid fa-link"></i></button>
+        </div>
+        <div id="post-editor" class="editor min-h-[80px] resize-y p-2 rounded" contenteditable="true"
+          data-placeholder="Write a post..."></div>
+        <div class="upload-section">
+          <div class="flex item-center gap-4 my-4">
+            <div class="emoji-wrapper relative">
+              <button type="button" class="emoji-toggle">😊</button>
+              <div class="emoji-picker hidden absolute bg-white border rounded shadow-md p-1 mt-1 z-10">
+                <span class="cursor-pointer px-1 hover:bg-[var(--primary)]">😀</span>
+                <span class="cursor-pointer px-1 hover:bg-[var(--primary)]">😂</span>
+                <span class="cursor-pointer px-1 hover:bg-[var(--primary)]">😍</span>
+                <span class="cursor-pointer px-1 hover:bg-[var(--primary)]">👍</span>
+                <span class="cursor-pointer px-1 hover:bg-[var(--primary)]">👎</span>
+                <span class="cursor-pointer px-1 hover:bg-[var(--primary)]">🤔</span>
+                <span class="cursor-pointer px-1 hover:bg-[var(--primary)]">😢</span>
+                <span class="cursor-pointer px-1 hover:bg-[var(--primary)]">🎉</span>
+                <span class="cursor-pointer px-1 hover:bg-[var(--primary)]">🚀</span>
+                <span class="cursor-pointer px-1 hover:bg-[var(--primary)]">🥳</span>
+              </div>
+            </div>
+            <button id="recordBtn" class="recordBtn"><i class="fa-solid fa-microphone"></i> Start Recording</button>
+          </div>
+          <input type="file" id="file-input" class="file-input" style="display: none;"
+            accept="image/*,audio/*,video/*,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document" />
+          <canvas class="canvasWaveform waveform w-full" id="waveform" width="450" height="100"></canvas>
+        </div>
+      </div>
+      <button class="ml-auto block" id="submit-post">Post</button>
+    </div>
+  </div>
+
+  <div id="post-filters" class="bg-white post-filters w-full shadow-lg p-4 flex items-center flex-col my-4 rounded">
+    <div
+      class="flex items-center justify-between w-full max-[500px]:flex-col max-[500px]:items-start max-[500px]:gap-4">
+      <div class="flex items-center gap-4 ">
+        <button class="filter-btn active" data-filter="Recent"><i class="fa-solid fa-clock"></i></button>
+        <button class="filter-btn" data-filter="Featured"><i class="fa-solid fa-star"></i></button>
+        <button class="filter-btn" data-filter="My Posts"><i class="fa-solid fa-user"></i></button>
+        <button class="filter-btn" data-filter="Saved Posts"><i class="fa-solid fa-bookmark"></i></button>
+      </div>
+
+      <div class="flex items-center gap-4">
+
+        <div class="sort-filter relative">
+          <button id="sort-filter-btn" class="filter-btn">Latest ▾</button>
+          <ul id="sort-filter-menu"
+            class="sort-filter-menu absolute top-[100%] right-0 bg-[#ffffff] border border-1-[#ccc] list-style-none p-0 mr-[4px] w-fit z-[10]">
+            <li class="py-2 px-8 cursor-pointer active" data-sort="Latest">Latest</li>
+            <li class="py-2 px-8 cursor-pointer" data-sort="Oldest">Oldest</li>
+            <li class="py-2 px-8 cursor-pointer text-nowrap" data-sort="Most Popular">Most Popular</li>
+          </ul>
+        </div>
+        <div class="file-filter relative">
+          <button id="file-filter-btn" class="filter-btn">All ▾</button>
+          <ul id="file-filter-menu"
+            class="file-filter-menu absolute top-[100%] right-0 bg-[#ffffff] border border-1-[#ccc] list-style-none p-0 mr-[4px] min-w-[6em] z-[10]">
+            <li class="py-2 px-8 cursor-pointer" data-type="All" class="active">All</li>
+            <li class="py-2 px-8 cursor-pointer" data-type="Image">Image</li>
+            <li class="py-2 px-8 cursor-pointer" data-type="Video">Video</li>
+            <li class="py-2 px-8 cursor-pointer" data-type="Audio">Audio</li>
+            <li class="py-2 px-8 cursor-pointer" data-type="File">File</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    <div class="search-wrapper w-full my-4 relative">
+      <input type="text" id="searchPost" class="py-2 px-4 rounded text-sm" placeholder="Search by author or text…"
+        autocomplete="off" />
+      <span class="clearIcon hidden absolute top-[50%] right-[8px] cursor-pointer text-sm translate-y-[-50%]"><i class="fa-solid fa-xmark"></i></span>
+      <span class="searchIcon absolute top-[50%] right-[8px] cursor-pointer text-sm translate-y-[-50%]"><i class="fa-solid fa-search"></i></span>
+    </div>
+  </div>
+
+  <div id="skeleton-loader" class="w-full">
+    <div class="skeleton-item flex gap-4 p-4 mb-4 bg-white rounded shadow">
+      <div class="skeleton-avatar"></div>
+      <div class="flex-1 flex flex-col gap-2">
+        <div class="skeleton-line short"></div>
+        <div class="skeleton-line"></div>
+        <div class="skeleton-line medium"></div>
+      </div>
+    </div>
+    <div class="skeleton-item flex gap-4 p-4 mb-4 bg-white rounded shadow">
+      <div class="skeleton-avatar"></div>
+      <div class="flex-1 flex flex-col gap-2">
+        <div class="skeleton-line short"></div>
+        <div class="skeleton-line"></div>
+        <div class="skeleton-line medium"></div>
+      </div>
+    </div>
+    <div class="skeleton-item flex gap-4 p-4 mb-4 bg-white rounded shadow">
+      <div class="skeleton-avatar"></div>
+      <div class="flex-1 flex flex-col gap-2">
+        <div class="skeleton-line short"></div>
+        <div class="skeleton-line"></div>
+        <div class="skeleton-line medium"></div>
+      </div>
+    </div>
+  </div>
+
+  <div id="forum-root" class="w-full"></div>
+
+  <!-- Delete confirmation modal -->
+  <div id="delete-modal" class="hidden fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+    <div class="bg-white p-4 rounded shadow-lg w-[90%] max-w-sm">
+      <h2 id="delete-modal-title" class="text-lg font-bold mb-4"></h2>
+      <div class="flex justify-end gap-2">
+        <button id="delete-confirm" class="bg-red-500 text-white px-4 py-1 rounded">Delete</button>
+        <button id="delete-cancel" class="bg-gray-300 px-4 py-1 rounded">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <script id="tmpl-item" type="text/x-jsrender">
+      <div 
+        class="item rounded bg-white shadow-xl flex flex-col gap-2 my-4 p-4 relative border-2 border-[#e9ebee]" 
+        data-uid="{{:uid}}" 
+        data-depth="{{:depth}}">
+        {{if canDelete}}
+          <button class="btn-delete" data-uid="{{:uid}}"><i class="fa-solid fa-trash"></i></button>
+        {{/if}}
+        <div class="author flex items-center mb-2">
+          <img class="avatar w-[40px] h-[40px] bg-[#ccc] rounded-full mr-[12px]"
+              src="{{:authorImage}}"
+              alt="{{:authorName}}"
+              onerror="this.onerror=null;this.src='https://files.ontraport.com/media/b0456fe87439430680b173369cc54cea.php03bzcx?Expires=4895186056&Signature=fw-mkSjms67rj5eIsiDF9QfHb4EAe29jfz~yn3XT0--8jLdK4OGkxWBZR9YHSh26ZAp5EHj~6g5CUUncgjztHHKU9c9ymvZYfSbPO9JGht~ZJnr2Gwmp6vsvIpYvE1pEywTeoigeyClFm1dHrS7VakQk9uYac4Sw0suU4MpRGYQPFB6w3HUw-eO5TvaOLabtuSlgdyGRie6Ve0R7kzU76uXDvlhhWGMZ7alNCTdS7txSgUOT8oL9pJP832UsasK4~M~Na0ku1oY-8a7GcvvVv6j7yE0V0COB9OP0FbC8z7eSdZ8r7avFK~f9Wl0SEfS6MkPQR2YwWjr55bbJJhZnZA__&Key-Pair-Id=APKAJVAAMVW6XQYWSTNA';">
+          <div class="info">
+            <span class="name font-bold">{{:authorName}}</span>
+            <span class="timestamp text-sm text-[#65676b] ml-2">{{:timeAgo}}</span>
+          </div>
+        </div>
+     <div class="content my-2">{{:content}}</div>
+        <div class="file-preview">
+          {{if depth === 0}}
+            {{if fileContent}}
+                {{if fileContent}}
+                  {{if fileType === "Image"}}
+                    <img src="{{:fileContent}}" style="width:100%;height:300px;object-fit:cover;" alt="preview" />
+                  {{else fileType === "Audio"}}
+                    <audio class="js-player" controls>
+                      <source src="{{:fileContent}}" type="audio/mpeg" />
+                      Your browser does not support the audio tag.
+                    </audio>
+                  {{else fileType === "Video"}}
+                    <video class="js-player" controls style="width: 100%; height: auto;">
+                      <source src="{{:fileContent}}" type="video/mp4" />
+                      Your browser does not support video.
+                    </video>
+                  {{else}}
+                    <a href="{{:fileContent}}" target="_blank" class="line-clamp-1 cursor-pointer text-blue-600 hover:underline">{{:fileContentName}}</a>
+                  {{/if}}
+                {{/if}}
+              {{/if}}
+          {{/if}}
+          {{if depth > 0}}
+          {{if fileContentComment}}
+                {{if fileContentComment}}
+                  {{if fileType === "Image"}}
+                    <img src="{{:fileContentComment || fileContentComment}}" style="width:100%;height:300px;object-fit:cover;" alt="preview" />
+                  {{else fileType === "Audio"}}
+                    <audio class="js-player" controls>
+                      <source src="{{:fileContentComment}}" type="audio/mpeg" />
+                      Your browser does not support the audio tag.
+                    </audio>
+                  {{else fileType === "Video"}}
+                    <video class="js-player" controls style="width: 100%; height: auto;">
+                      <source src="{{:fileContentComment}}" type="video/mp4" />
+                      Your browser does not support video.
+                    </video>
+                  {{else}}
+                    <div>{{:fileContentCommentName}}</div>
+                  {{/if}}
+                {{/if}}
+              {{/if}}
+        {{/if}}
+
+  </div>
+
+        <div class="actions">
+          <div class = "flex items-center justify-between">
+            <div class = "flex items-center gap-4">
+              <button class="btn-like{{:hasUpvoted ? ' liked' : ''}} flex items-center" data-uid="{{:uid}}"><i class="fa-solid fa-thumbs-up"></i> <span class="ml-1">{{:upvotes}}</span></button>
+              <button class="btn-comment flex items-center" data-uid="{{:uid}}"><i class="fa-solid fa-comment"></i></button>
+            </div>
+            {{if depth === 0}}
+              <button class="btn-bookmark{{:hasBookmarked ? ' bookmarked' : ''}} flex items-center" data-uid="{{:uid}}"><i class="fa-solid fa-bookmark"></i></button>
+            {{/if}}
+          </div>
+        </div>
+
+        <div class="ribbon w-full my-4 py-2 bg-[#e9ebee] text-center cursor-pointer text-sm hover:bg-[#007bff] hover:text-white" data-uid="{{:uid}}">
+          {{if depth === 0}}
+            {{:children.length}} {{:children.length === 1 ? 'Comment' : 'Comments'}}
+          {{else}}
+            {{:children.length}} {{:children.length === 1 ? 'Reply' : 'Replies'}}
+          {{/if}}
+        </div>
+        {{if children.length && !isCollapsed}}
+          <div class="children visible my-4 {{:depth < 2 ? 'pl-8 ml-[12px] border-l border-2-[#e9ebee]' : ''}}">
+            {{for children}}
+              {{include tmpl="#tmpl-item"/}}
+            {{/for}}
+          </div>
+        {{/if}}
+      </div>
+    </script>
+
+
+  <script src="https://unpkg.com/mic-recorder-to-mp3@2.2.1/dist/index.min.js"></script>
+
+
+  <script type="module" src="../src/main.js"></script>
+
+  <div id="toast-container" class="toast-container"></div>
+
+  <div id="file-preview-modal" class="hidden fixed inset-0 bg-black/75 flex items-center justify-center z-[99]">
+    <div class="modal-content bg-white p-4 m-4 rounded relative max-w-full max-h-full">
+
+      <div id="preview-container" class="max-h-[80vh] overflow-auto"></div>
+    </div>
+    <a id="download-preview" href="#" download class="absolute top-2 left-2 cursor-pointer">
+      <i class="fa-solid fa-download text-white text-2xl"></i>
+    </a>
+    <div id="close-file-preview" class="absolute top-2 cursor-pointer right-2 !p-0">
+      <i class="fa-solid fa-xmark text-white text-2xl"></i>
+    </div>
+  </div>
+</body>
+
+</html>
